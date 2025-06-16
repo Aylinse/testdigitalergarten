@@ -311,5 +311,4 @@ ScriptsOnlyBuild:
   platform: 20
   scenePathNames:
   - Assets/Scenes/Station3/Station3.unity
-  playerPath: C:/Users/User/Private Projects/testdigitalergarten/testdigitalergarten/My
-    project/WebGLBuild
+  playerPath: C:/Users/User/Private Projects/testdigitalergarten/testdigitalergarten/docs
