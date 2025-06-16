@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine;
 
 public class DraggableFood : MonoBehaviour
 {
@@ -10,10 +9,9 @@ public class DraggableFood : MonoBehaviour
     private bool dragging = false;
     private Vector3 startPos;
 
-    public bool hasGrain;                // Set in inspector or code
-    public string currentBasketTag = ""; // Set when dropped
-
-    private bool placedInBasket = false; // Once placed, can't drag again
+    public bool hasGrain;                
+    public string currentBasketTag = ""; 
+    private bool placedInBasket = false; 
 
     void Start()
     {
@@ -23,7 +21,16 @@ public class DraggableFood : MonoBehaviour
 
     void Update()
     {
-        if (placedInBasket) return; // No dragging after placed
+#if UNITY_EDITOR
+        HandleMouseInput();
+#else
+        HandleTouchInput();
+#endif
+    }
+
+    void HandleTouchInput()
+    {
+        if (placedInBasket) return;
 
         if (Input.touchCount > 0)
         {
@@ -51,9 +58,39 @@ public class DraggableFood : MonoBehaviour
         }
     }
 
-    bool IsTouchingThisObject(Vector3 touchPos)
+    void HandleMouseInput()
     {
-        Collider2D hit = Physics2D.OverlapPoint(touchPos);
+        if (placedInBasket) return;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 mouseWorldPos = cam.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorldPos.z = 0;
+
+            if (IsTouchingThisObject(mouseWorldPos))
+            {
+                dragging = true;
+                offset = transform.position - mouseWorldPos;
+            }
+        }
+        else if (Input.GetMouseButton(0) && dragging)
+        {
+            Vector3 mouseWorldPos = cam.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorldPos.z = 0;
+            transform.position = mouseWorldPos + offset;
+        }
+        else if (Input.GetMouseButtonUp(0) && dragging)
+        {
+            dragging = false;
+            Vector3 mouseWorldPos = cam.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorldPos.z = 0;
+            DetectBasketDrop(mouseWorldPos);
+        }
+    }
+
+    bool IsTouchingThisObject(Vector3 pos)
+    {
+        Collider2D hit = Physics2D.OverlapPoint(pos);
         return hit != null && hit.gameObject == gameObject;
     }
 
@@ -65,12 +102,11 @@ public class DraggableFood : MonoBehaviour
         {
             currentBasketTag = hit.tag;
             placedInBasket = true;
-            // Snap to basket position
             transform.position = hit.transform.position;
             return;
         }
 
-        // Not dropped on basket, return to start pos
+        // Not on basket
         transform.position = startPos;
         currentBasketTag = "";
     }
